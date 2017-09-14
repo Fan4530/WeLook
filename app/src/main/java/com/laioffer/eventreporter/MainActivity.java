@@ -21,17 +21,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class MainActivity extends AppCompatActivity implements EventFragment.OnItemSelectListener{
-    EventFragment listFragment;
-    CommentFragement gridFragment;//this is to connect to two fragements
-
-    // implement the method onItemSelected, throught call CommentFragment
-    @Override
-    public void onItemSelected(int position) {
-        gridFragment.onItemSelected(position);
-    }
-
-
+public class MainActivity extends AppCompatActivity {
 
 
     private EditText mUsernameEditText;
@@ -42,9 +32,6 @@ public class MainActivity extends AppCompatActivity implements EventFragment.OnI
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-
-
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -62,7 +49,9 @@ public class MainActivity extends AppCompatActivity implements EventFragment.OnI
         mRegisterButton = (Button) findViewById(R.id.register);
 
 
-
+        /**
+         *  register
+         */
 
 
         mRegisterButton.setOnClickListener(new View.OnClickListener() {
@@ -71,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements EventFragment.OnI
                 final String username = mUsernameEditText.getText().toString();
                 final String password = mPasswordEditText.getText().toString();
                 final User user = new User(username, password, System.currentTimeMillis());
-                mDatabase.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
+                mDatabase.child("users").addListenerForSingleValueEvent(new ValueEventListener() {//?
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.hasChild(username)) {
@@ -92,7 +81,9 @@ public class MainActivity extends AppCompatActivity implements EventFragment.OnI
         });
 
 
-
+        /**
+         * Login
+         */
         mSubmitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -103,6 +94,9 @@ public class MainActivity extends AppCompatActivity implements EventFragment.OnI
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.hasChild(username) && (password.equals(dataSnapshot.child(username).child("password").getValue()))) {
                             Log.i( " Your log", "You successfully login");
+                            /**
+                             * change to eventActivity
+                             */
                             Intent myIntent = new Intent(MainActivity.this, EventActivity.class);
                             myIntent.putExtra("Username", username);
                             startActivity(myIntent);
@@ -112,48 +106,14 @@ public class MainActivity extends AppCompatActivity implements EventFragment.OnI
                             Toast.makeText(getBaseContext(),"Please login again", Toast.LENGTH_SHORT).show();
                         }
                     }
-
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-
                     }
                 });
             }
         });
 
 
-//        //add list view
-//        if (isTablet()) {
-//            listFragment = new EventFragment();
-//            getSupportFragmentManager().beginTransaction().add(R.id.event_container, listFragment).commit();
-//        }
-//
-//        //add Gridview
-//        gridFragment = new CommentFragement();
-//        getSupportFragmentManager().beginTransaction().add(R.id.comment_container, gridFragment).commit();
-
-     //   Log.e("Life cycle test", "We are at onCreate()");//
-        // Get ListView object from xml.
-//        ListView eventListView = (ListView) findViewById(R.id.event_list);// R.id.event.list??
-//
-//        // Initialize an adapter.
-//        /*ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-//                this,
-//                R.layout.event_item,
-//                R.id.event_name,
-//                getEventNames());*/
-//        //?????
-//        EventAdapter adapter = new EventAdapter(this);//??? what is this
-//
-//        // Assign adapter to ListView.
-//        eventListView.setAdapter(adapter);///??? method ??
-
-
-//        // Show different fragments based on screen size.
-//        if (findViewById(R.id.fragment_container) != null) {
-//            Fragment fragment = isTablet() ? new  CommentFragment() : new EventFragment();
-//            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, fragment).commit();//v4 version freagment
-//        }
     }
 
     private boolean isTablet() {
@@ -161,52 +121,6 @@ public class MainActivity extends AppCompatActivity implements EventFragment.OnI
                 Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;
     }
 
-
-    /**
-     * A dummy function to get fake event names.
-     *
-     * @return an array of fake event names.
-     */
-//    private String[] getEventNames() {// ??? how to use it
-//        String[] names = {
-//                "Event1", "Event2", "Event3",
-//                "Event4", "Event5", "Event6",
-//                "Event7", "Event8", "Event9",
-//                "Event10", "Event11", "Event12"};
-//        return names;
-//    }
-
-
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.e("Life cycle test", "We are at onStart()");
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.e("Life cycle test", "We are at onResume()");
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.e("Life cycle test", "We are at onPause()");
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.e("Life cycle test", "We are at onStop()");
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.e("Life cycle test", "We are at onDestroy()");
-    }
 
 }
 

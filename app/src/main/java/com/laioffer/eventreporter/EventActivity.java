@@ -18,22 +18,28 @@ public class EventActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        /**
+         * This activity has three part views
+         * 1. TextView: welcome ...
+         * 2. Fragment container
+         * 3. Navigation button
+         */
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event);
-        //get user name from MainActivity
+        //convert from MainActivity
         Intent intent = getIntent();
+        //set welcome tag
         username = intent.getStringExtra("Username");
         usernameTextView = (TextView) findViewById(R.id.text_user);
         usernameTextView.setText("Welcome, " + username);
-
         // Create ReportEventFragment
         if (reportFragment == null) {
             reportFragment = new ReportEventFragment();
         }
 
-        // Add Fragment to the fragment
+        // Add ReportEventFragment to this activity
         getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, new ReportEventFragment()).commit();
-
+        // the report and event navigation
         BottomNavigationView bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
 
         // Set Item click listener to the menu items
@@ -47,6 +53,8 @@ public class EventActivity extends AppCompatActivity {
                                         .replace(R.id.fragment_container, reportFragment).commit();
                                 break;
                             case R.id.action_events:
+                                // user may convert between two fragments not only once,
+                                // so you need to check if the user has create the fragment
                                 if (showEventsFragment == null) {
                                     showEventsFragment = new ShowEventFragment();
                                 }

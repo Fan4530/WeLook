@@ -38,8 +38,6 @@ import com.google.firebase.storage.UploadTask;
 import java.io.File;
 
 import static android.app.Activity.RESULT_OK;
-
-
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -71,9 +69,7 @@ public class ReportEventFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        // Inflate the layout for this fragment
-//auth
+
         mAuth = FirebaseAuth.getInstance();
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -101,9 +97,9 @@ public class ReportEventFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_report_event, container, false);
         mTextViewLocation = (EditText) view.findViewById(R.id.text_event_location);
 
-        checkPermission();//has not been implemeents ??
+        checkPermission();
         mImageView = (ImageView) view.findViewById(R.id.img_event_pic);
-        mSelectButton = (Button) view.findViewById(R.id.button_select);
+
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReference();
 
@@ -111,46 +107,82 @@ public class ReportEventFragment extends Fragment {
 
 
         getmTextViewDest = (EditText) view.findViewById(R.id.text_event_description);
-        mReportButton = (Button) view.findViewById(R.id.button_report);
+
         username = ((EventActivity)getActivity()).getUsername();
         database = FirebaseDatabase.getInstance().getReference();
 
-
-
+        /**
+         * report new event
+         */
+        mReportButton = (Button) view.findViewById(R.id.button_report);
         mReportButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {//user choose if they'd like to upload or not
+            public void onClick(View v) {
                 String key = uploadEvent();
-                if (!mPicturePath.equals("")) {
+                if (!mPicturePath.equals("")) {//user choose if they'd like to upload or not
                     Log.i(TAG, "key" + key);
                     uploadImage(mPicturePath, key);
                     mPicturePath = "";
                 }
-
             }
         });
+        /**
+         *  select picture
+         */
+        mSelectButton = (Button) view.findViewById(R.id.button_select);
         mSelectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(
-                        Intent.ACTION_PICK,//action, cadicoro???
+                Intent intent = new Intent(//  this is a implicity intent
+                        //two parameters : action, category
+                        Intent.ACTION_PICK,
                         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent, RESULT_LOAD_IMAGE);// here, start acticity for result,
-                // after a simple operation of that acticity,  return something, that acticity is in a short time,
+                startActivityForResult(intent, RESULT_LOAD_IMAGE);
+                //return a image to this activity
             }
         });
-
         return view;
     }
 
     /**
-     * upload data and set path
+     * In select picture part, when an image is returned, the below method will be called automatically
      */
-    private String uploadEvent() {
-        String title = mTextViewTitle.getText().toString();
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // check if it is return from the place where "selecting image"
+        if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
+            Uri selectedImage = data.getData();// return an uri
+            String[] filePathColumn = {MediaStore.Images.Media.DATA};
+            // convert uri to absolute path
+            Cursor cursor = getContext().getContentResolver().query(selectedImage,
+                    filePathColumn, null, null, null);
+            cursor.moveToFirst();
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            String picturePath = cursor.getString(columnIndex);
+            cursor.close();
 
+            Log.e(TAG, picturePath);
+            mPicturePath = picturePath;
+            //set the image in XML as visible
+            mImageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+            mImageView.setVisibility(View.VISIBLE);
+        }
+    }
+
+
+    private String uploadEvent() {// return key
+        /**
+         * upload data and set path
+         * Users input data below
+         * @param mTextViewTitle  EditText
+         * @param mTextViewLocation EditText
+         * @param getmTextViewDest EditText
+         */
+        String title = mTextViewTitle.getText().toString();
         String location = mTextViewLocation.getText().toString();
         String description = getmTextViewDest.getText().toString();
+
         if (location.equals("") || description.equals("")) {
             return "";
         }
@@ -160,10 +192,11 @@ public class ReportEventFragment extends Fragment {
         event.setDescription(description);
         event.setTime(System.currentTimeMillis());
         event.setTitle(title);
-
         event.setUser(username);
         String key = database.child("events").push().getKey();
         event.setId(key);
+
+        //upload to database
         database.child("events").child(key).setValue(event, new DatabaseReference.CompletionListener() {
             @Override
             public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
@@ -180,40 +213,35 @@ public class ReportEventFragment extends Fragment {
         });
         return key;
     }
+    /**
+     * Upload image to storage and get file path in database
+     */
+    private void uploadImage(final String imgPath, final String eventId) {
+        Uri file = Uri.fromFile(new File(imgPath));
+        //create a reference in cloud, the [ath like this
+        //image/IMG_20170617_184742.JPG 149989403894
+        StorageReference imgRef = storageRef.child("images/" + file.getLastPathSegment() + " " + System.currentTimeMillis());
+        //create a upload task
+        UploadTask uploadTask = imgRef.putFile(file);
 
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        mAuth.addAuthStateListener(mAuthListener);
-
-
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (mAuthListener != null) {
-            mAuth.removeAuthStateListener(mAuthListener);
-        }
-    }
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
-            Uri selectedImage = data.getData();
-            String[] filePathColumn = {MediaStore.Images.Media.DATA};
-            Cursor cursor = getContext().getContentResolver().query(selectedImage,
-                    filePathColumn, null, null, null);
-            cursor.moveToFirst();
-            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-            String picturePath = cursor.getString(columnIndex);
-            cursor.close();
-            Log.e(TAG, picturePath);
-            mPicturePath = picturePath;
-            mImageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
-            mImageView.setVisibility(View.VISIBLE);
-        }
+        // Register observers to listen for when the download is done or if it fails
+        // Two listeners
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle unsuccessful uploads
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {// begin to upload
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+                // get the url of the picture from storage
+                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                Log.i(TAG, "upload successfully");
+                //set the url in database(!database is not storage)
+                database.child("events").child(eventId).child("imgUri").setValue(downloadUrl.toString());
+            }
+        });
     }
 
 
@@ -228,32 +256,17 @@ public class ReportEventFragment extends Fragment {
                     123);
         }
     }
-
-    /**
-     * Upload image and get file path
-     */
-    private void uploadImage(final String imgPath, final String eventId) {
-        Uri file = Uri.fromFile(new File(imgPath));//
-        StorageReference imgRef = storageRef.child("images/" + file.getLastPathSegment() + " " + System.currentTimeMillis());//
-//创建了一个云端的reference
-
-        UploadTask uploadTask = imgRef.putFile(file);//建立task
-
-        // Register observers to listen for when the download is done or if it fails
-        uploadTask.addOnFailureListener(new OnFailureListener() {//两个linster
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {//加两个listner以后才算upload
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();//从clodud 得到的image的
-                Log.i(TAG, "upload successfully");
-                database.child("events").child(eventId).child("imgUri").setValue(downloadUrl.toString());//存
-            }
-        });
+    @Override
+    public void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
+    }
 }

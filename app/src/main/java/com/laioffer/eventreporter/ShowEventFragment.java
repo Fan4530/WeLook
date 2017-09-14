@@ -30,9 +30,7 @@ public class ShowEventFragment extends Fragment {
 
     public ShowEventFragment() {
         // Required empty public constructor
-
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

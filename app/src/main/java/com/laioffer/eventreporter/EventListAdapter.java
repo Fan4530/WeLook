@@ -105,8 +105,7 @@ public class EventListAdapter extends BaseAdapter {
         TextView location;
         TextView description;
         TextView time;
-        ImageView imgview;//
-
+        ImageView imgview;
 
         ImageView img_view_good;
         ImageView img_view_comment;
@@ -135,7 +134,7 @@ public class EventListAdapter extends BaseAdapter {
                     viewHolder.description = (TextView) rowView.findViewById(R.id.event_item_description);
                     viewHolder.time = (TextView) rowView.findViewById(R.id.event_item_time);
                     viewHolder.imgview = (ImageView) rowView.findViewById(R.id.event_item_img);
-                    //评论
+                    //comment
                     viewHolder.img_view_good = (ImageView) rowView.findViewById(R.id.event_good_img);
                     viewHolder.img_view_comment = (ImageView) rowView.findViewById(R.id.event_comment_img);
                     viewHolder.img_view_repost = (ImageView) rowView.findViewById(R.id.event_repost_img);
@@ -152,9 +151,6 @@ public class EventListAdapter extends BaseAdapter {
             }
 
             rowView.setTag(viewHolder);
-
-
-
         }
 
 
@@ -191,22 +187,21 @@ public class EventListAdapter extends BaseAdapter {
             String[] locations = event.getLocation().split(",");
             holder.location.setText(locations[1] + "," + locations[2]);//location有要求
             //CA, LA
-            //只选择前两个显示
             holder.description.setText(event.getDescription());//
             holder.time.setText(Utilities.timeTransformer(event.getTime()));
 
 
             if (event.getImgUri() != "") {
                 final String url = event.getImgUri();
-                holder.imgview.setVisibility(View.VISIBLE);
+                holder.imgview.setVisibility(View.VISIBLE);//
                 new AsyncTask<Void, Void, Bitmap>() {
                     @Override
-                    protected Bitmap doInBackground(Void... params) {
+                    protected Bitmap doInBackground(Void... params) {//background thread, return Bitmap type
                         return Utilities.getBitmapFromURL(url);
                     }
 
                     @Override
-                    protected void onPostExecute(Bitmap bitmap) {
+                    protected void onPostExecute(Bitmap bitmap) {//UI thread, input Bitmap from above background
                         holder.imgview.setImageBitmap(bitmap);
                     }
                 }.execute();
